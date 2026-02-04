@@ -1,28 +1,66 @@
 pipeline {
     agent any
-    options {
-        skipStagesAfterUnstable()
+
+    tools {
+        maven 'Maven 3.9'   // Must match name in Global Tool Config
+        jdk 'JDK 17'        // Must match name in Global Tool Config
     }
+
+    environment {
+        MAVEN_OPTS = '-Dmaven.test.failure.ignore=false'
+    }
+
     stages {
-        stage('Build') {
+
+        stage('Checkout') {
             steps {
-                sh 'mvn -B -DskipTests clean package'
+                echo 'Checking out source code from GitHub...'
+                checkout scm
             }
         }
-        stage('Test') {
+
+        stage('Build') {
             steps {
-                sh 'mvn test'
+                echo 'Building the Java application with Maven...'
+                sh 'mvn -B clean compile'
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                echo 'Running unit tests...'
+                sh 'mvn -B test'
             }
             post {
                 always {
-                    junit 'target/surefire-reports/*.xml'
+                    echo 'Archiving test results...'
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
                 }
             }
         }
-        stage('Deliver') { 
+
+        stage('Package') {
             steps {
-                sh './jenkins/scripts/deliver.sh' 
+                echo 'Packaging the application...'
+                sh 'mvn -B package -DskipTests'
             }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check the logs for details.'
+        }
+        always {
+            cleanWs()
         }
     }
 }
