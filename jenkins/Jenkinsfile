@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven 3.9'   // Must match name in Global Tool Config
-        jdk 'JDK 17'        // Must match name in Global Tool Config
+        maven 'maven 3.9'   // must match Maven tool name
+        jdk 'jdk 21'        // must match JDK tool name EXACTLY
     }
 
     environment {
@@ -22,19 +22,18 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the Java application with Maven...'
-                sh 'mvn -B clean compile'
+                bat 'mvn -B clean compile'
             }
         }
 
         stage('Unit Test') {
             steps {
                 echo 'Running unit tests...'
-                sh 'mvn -B test'
+                bat 'mvn -B test'
             }
             post {
                 always {
-                    echo 'Archiving test results...'
-                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                    junit allowEmptyResults: true, testResults: 'target\\surefire-reports\\*.xml'
                 }
             }
         }
@@ -42,7 +41,7 @@ pipeline {
         stage('Package') {
             steps {
                 echo 'Packaging the application...'
-                sh 'mvn -B package -DskipTests'
+                bat 'mvn -B package -DskipTests'
             }
             post {
                 success {
@@ -53,12 +52,6 @@ pipeline {
     }
 
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed. Check the logs for details.'
-        }
         always {
             cleanWs()
         }
