@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'maven 3.9'   // must match Maven tool name
+        maven 'Maven 3.9'   // must match Maven tool name
         jdk 'JDK 17'        // must match JDK tool name EXACTLY
     }
 
